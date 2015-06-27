@@ -1,0 +1,43 @@
+kubelet:
+  command: >
+    --address=0.0.0.0
+    --api-servers=https://kube-apiserver.c.kubestack.internal:6443
+    --container-runtime=docker
+    --containerized
+    --enable-server
+    --kubeconfig=/etc/kubernetes/kubelet.kubeconfig
+    --machine-id-file=/rootfs/etc/machine-id
+    --register-node=true
+    --tls-cert-file=/etc/kubernetes/ssl/kubelet-server.pem
+    --tls-private-key-file=/etc/kubernetes/ssl/kubelet-server-key.pem
+    --v=1
+  image: "kelseyhightower/kubelet:0.20.0"
+  net: "host"
+  privileged: true
+  restart: "always"
+  volumes:
+    - "/usr/bin/nsenter:/nsenter"
+    - "/usr:/usr"
+    - "/lib64:/lib64"
+    - "/:/rootfs:ro"
+    - "/etc/kubernetes:/etc/kubernetes"
+    - "/etc/os-release:/etc/os-release"
+    - "/usr/share/ca-certificates/:/etc/ssl/certs"
+    - "/sys:/sys:ro"
+    - "/var/lib/docker/:/var/lib/docker:ro"
+    - "/var/lib/kubelet/:/var/lib/kubelet:rw"
+    - "/var/run:/var/run:rw"
+proxy:
+  command: >
+    --kubeconfig=/etc/kubernetes/proxy.kubeconfig
+    --logtostderr=true
+    --v=1
+  image: "kelseyhightower/kube-proxy:0.20.0"
+  net: "host"
+  privileged: true
+  restart: "always"
+  volumes:
+    - "/etc/kubernetes/proxy:/etc/kubernetes"
+    - "/usr/share/ca-certificates:/etc/ssl/certs"
+    - "/usr:/usr"
+    - "/lib64:/lib64"

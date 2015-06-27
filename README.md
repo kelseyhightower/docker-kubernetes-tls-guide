@@ -220,7 +220,9 @@ kubernetes-admin-user.pem
 
 ### Configure Kubernetes
 
-#### kube-apiserver
+#### Controllers
+
+A Kubernetes controller includes the API server, Controller Manager, and the Scheduler.
 
 Copy the server certs to the Kubernetes API server.
 
@@ -261,6 +263,33 @@ Start the Kubernetes Controller containers
 $ docker-compose -p kubernetes -f compose-controller.yaml up -d
 ```
 
+#### Workers
+
+A Kubernetes worker includes the kubelet and the proxy.
+
+Copy the client certs to the worker node.
+
+```
+$ scp ca.pem core@node0.kubestack.io:~/
+$ scp kube-proxy-client-key.pem kube-proxy-client.pem core@node0.kubestack.io:~/
+$ scp kubelet-client-key.pem kubelet-client.pem core@node0.kubestack.io:~/
+```
+
+```
+$ ssh core@node0.kubestack.io
+$ sudo mkdir -p /etc/kubernetes
+$ sudo mv ca.pem /etc/kubernetes/ca.pem
+$ sudo mv kube-proxy-client-key.pem /etc/kubernetes/kube-proxy/client-key.pem
+$ sudo mv kube-proxy-client.pem /etc/kubernetes/kube-proxy/client.pem
+$ sudo mv kubelet-client-key.pem /etc/kubernetes/kubelet/client-key.pem
+$ sudo mv kubelet-client.pem /etc/kubernetes/kubelet/client.pem
+$ sudo chmod 0444 /etc/kubernetes/ca.pem
+$ sudo chmod 0400 /etc/kubernetes/kube-proxy/client-key.pem
+$ sudo chmod 0444 /etc/kubernetes/kube-proxy/client.pem
+$ sudo chmod 0400 /etc/kubernetes/kubelet/client-key.pem
+$ sudo chmod 0444 /etc/kubernetes/kubelet/client.pem
+```
+
 #### kubectl
 
 ```
@@ -285,4 +314,9 @@ $ kubectl config set-context secure \
 
 ```
 $ kubectl config use-context secure
+```
+
+```
+$ kubectl cluster-info
+$ kubectl get cs
 ```

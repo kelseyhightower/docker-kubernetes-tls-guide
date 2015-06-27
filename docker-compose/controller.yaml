@@ -1,0 +1,60 @@
+etcd:
+  command: >
+    --advertise-client-urls http://127.0.0.1:2379 
+    --data-dir /var/lib/etcd 
+    --listen-client-urls http://127.0.0.1:2379 
+    --listen-peer-urls http://127.0.0.1:2380 
+    --name etcd0
+  image: "quay.io/coreos/etcd:v2.0.12"
+  net: "host"
+  restart: "always"
+  volumes:
+    - "/var/lib/etcd:/var/lib/etcd"
+    - "/usr/share/ca-certificates/:/etc/ssl/certs"
+apiserver:
+  command: >
+    --admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+    --authorization-mode=ABAC
+    --authorization-policy-file=/etc/kubernetes/policy.jsonl
+    --client-ca-file=/etc/kubernetes/ca.pem
+    --cluster-name=kubernetes
+    --etcd-servers=http://127.0.0.1:2379
+    --insecure-bind-address=127.0.0.1
+    --insecure-port=8080
+    --logtostderr=true
+    --secure-port=6443
+    --service-cluster-ip-range=10.200.20.0/24
+    --service-node-port-range='30000-32767'
+    --tls-cert-file=/etc/kubernetes/server.pem
+    --tls-private-key-file=/etc/kubernetes/server-key.pem
+    --v=2
+  image: "kelseyhightower/kube-apiserver:0.20.0"
+  net: "host"
+  restart: "always"
+  volumes:
+    - "/usr/share/ca-certificates:/etc/ssl/certs"
+    - "/var/run/kubernetes:/var/run/kubernetes"
+  volumes_from:
+    - kube-apiserver-configs
+controllermanager:
+  command: >
+    --logtostderr=true
+    --master=http://127.0.0.1:8080
+    --v=2
+  image: "kelseyhightower/kube-controller-manager:0.20.0"
+  net: "host"
+  restart: "always"
+  volumes:
+    - "/etc/kubernetes:/etc/kubernetes"
+    - "/usr/share/ca-certificates:/etc/ssl/certs"
+scheduler:
+  command: >
+    --logtostderr=true
+    --master=http://127.0.0.1:8080
+    --v=2
+  image: "kelseyhightower/kube-scheduler:0.20.0"
+  net: "host"
+  restart: "always"
+  volumes:
+    - "/etc/kubernetes/scheduler:/etc/kubernetes"
+    - "/usr/share/ca-certificates:/etc/ssl/certs"
