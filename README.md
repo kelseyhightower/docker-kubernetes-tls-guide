@@ -18,9 +18,9 @@ $ git clone https://github.com/kelseyhightower/docker-kubernetes-tls-guide.git
 $ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 ```
 
-## Generate Server and Client Certs
+## Docker
 
-### Docker
+### Generate Server and Client Certs
 
 Server Cert
 
