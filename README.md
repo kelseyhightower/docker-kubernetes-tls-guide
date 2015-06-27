@@ -290,6 +290,21 @@ $ sudo chmod 0400 /etc/kubernetes/kubelet/client-key.pem
 $ sudo chmod 0444 /etc/kubernetes/kubelet/client.pem
 ```
 
+Copy the kubeconfigs for the kubelet and proxy services.
+
+```
+$ scp kubeconfigs/kubelet.kubeconfig core@node0.kubestack.io:~/
+$ scp kubeconfigs/proxy.kubeconfig core@node0.kubestack.io:~/
+```
+
+```
+$ ssh core@node0.kubestack.io
+$ sudo mv kubelet.kubeconfig /etc/kubernetes/kubelet/
+$ sudo mv proxy.kubeconfig /etc/kubernetes/kube-proxy/
+$ sudo chmod 0444 /etc/kubernetes/kubelet/kubelet.kubeconfig
+$ sudo chmod 0444 /etc/kubernetes/kube-proxy/proxy.kubeconfig
+```
+
 #### kubectl
 
 ```
