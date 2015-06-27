@@ -1,0 +1,16 @@
+{
+  "CN": "client",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "Docker",
+      "OU": "Docker Admins",
+      "ST": "Oregon"
+    }
+  ]
+}
