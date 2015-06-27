@@ -22,7 +22,7 @@ $ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 
 ### Generate Server and Client Certs
 
-Server Cert
+#### Docker Engine
 
 ```
 $ cfssl gencert \
@@ -41,7 +41,7 @@ docker-server.csr
 docker-server.pem
 ```
 
-Client Cert
+#### Docker Client
 
 ```
 $ cfssl gencert \
@@ -60,51 +60,31 @@ docker-client.csr
 docker-client.pem
 ```
 
-#### Configure Docker
+### Configure Docker
 
-Client
+#### Docker Engine
 
-Copy the client certs:
-
-```
-$ mkdir -pv ~/.docker
-$ cp -v ca.pem ~/.docker/ca.pem
-$ cp -v docker-client.pem ~/.docker/cert.pem
-$ cp -v docker-client-key.pem ~/.docker/key.pem
-```
-
-Fix permissions:
-
-```
-$ chmod 0444 ~/.docker/ca.pem
-$ chmod 0444 ~/.docker/cert.pem
-$ chmod 0400 ~/.docker/key.pem
-```
-
-Server
-
-Copy the server certs:
+Copy the server certs to the Docker host.
 
 ```
 $ scp ca.pem docker-server-key.pem docker-server.pem core@docker.kubestack.io:~/
+```
+
+Move the server certs into place and fix permissions.
+
+```
 $ ssh core@docker.kubestack.io
 $ sudo mv ca.pem /etc/docker/ssl/ca.pem
 $ sudo mv docker-server-key.pem /etc/docker/ssl/server-key.pem
 $ sudo mv docker-server.pem /etc/docker/ssl/server.pem
-```
-
-Fix permissions:
-
-```
-$ ssh core@docker.kubestack.io
 $ sudo chmod 0444 /etc/docker/ssl/ca.pem
 $ sudo chmod 0400 /etc/docker/ssl/server-key.pem
 $ sudo chmod 0444 /etc/docker/ssl/server.pem
 ```
 
-Configure the Docker Engine to use the certs
+Configure the Docker Engine service to use the certs.
 
-Edit: /etc/systemd/system/docker.service
+Edit: `/etc/systemd/system/docker.service`
 
 ```
 [Unit]
@@ -128,8 +108,34 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
+Start or restart the Docker daemon
+
 ```
 $ sudo systemctl start docker
+```
+
+```
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart docker
+```
+
+#### Client
+
+Copy the client certs to the Docker client config dir.
+
+```
+$ mkdir -pv ~/.docker
+$ cp -v ca.pem ~/.docker/ca.pem
+$ cp -v docker-client.pem ~/.docker/cert.pem
+$ cp -v docker-client-key.pem ~/.docker/key.pem
+$ chmod 0444 ~/.docker/ca.pem
+$ chmod 0444 ~/.docker/cert.pem
+$ chmod 0400 ~/.docker/key.pem
+```
+
+```
+$ export DOCKER_HOST="tcp://docker.kubestack.io:2376" DOCKER_TLS_VERIFY=1
+$ docker ps
 ```
 
 ## Kubernetes
@@ -178,7 +184,7 @@ kubernetes-admin-user.pem
 
 #### kube-apiserver
 
-Copy the server certs
+Copy the server certs to the Kubernetes API server.
 
 ```
 $ scp ca.pem kube-apiserver-server-key.pem kube-apiserver-server.pem core@kube-apiserver.kubestack.io:~/
@@ -187,12 +193,6 @@ $ sudo mkdir -p /etc/kubernetes/kube-apiserver
 $ sudo mv ca.pem /etc/kubernetes/kube-apiserver/ca.pem
 $ sudo mv kube-apiserver-server-key.pem /etc/kubernetes/kube-apiserver/server-key.pem
 $ sudo mv kube-apiserver-server.pem /etc/kubernetes/kube-apiserver/server.pem
-```
-
-Fix permissions:
-
-```
-$ ssh core@kube-apiserver.kubestack.io
 $ sudo chmod 0444 /etc/kubernetes/kube-apiserver/ca.pem
 $ sudo chmod 0400 /etc/kubernetes/kube-apiserver/server-key.pem
 $ sudo chmod 0444 /etc/kubernetes/kube-apiserver/server.pem
