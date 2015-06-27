@@ -161,6 +161,44 @@ kube-apiserver-server.csr
 kube-apiserver-server.pem
 ```
 
+#### kubelet
+
+```
+$ cfssl gencert \
+-ca=ca.pem \
+-ca-key=ca-key.pem \
+-config=ca-config.json \
+-profile=client \
+kubelet-client-csr.json | cfssljson -bare kubelet-client
+```
+
+Results:
+
+```
+kubelet-client-key.pem
+kubelet-client.csr
+kubelet-client.pem
+```
+
+#### kube-proxy
+
+```
+$ cfssl gencert \
+-ca=ca.pem \
+-ca-key=ca-key.pem \
+-config=ca-config.json \
+-profile=client \
+kube-proxy-client-csr.json | cfssljson -bare kube-proxy-client
+```
+
+Results
+
+```
+kube-proxy-client-key.pem 
+kube-proxy-client.csr
+kube-proxy-client.pem
+```
+
 #### kubectl
 
 ```
