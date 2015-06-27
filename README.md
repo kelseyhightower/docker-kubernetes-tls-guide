@@ -64,6 +64,8 @@ docker-client.pem
 
 Client
 
+Copy the client certs:
+
 ```
 $ mkdir -pv ~/.docker
 $ cp -v ca.pem ~/.docker/ca.pem
@@ -71,7 +73,17 @@ $ cp -v docker-client.pem ~/.docker/cert.pem
 $ cp -v docker-client-key.pem ~/.docker/key.pem
 ```
 
+Fix permissions:
+
+```
+$ chmod 0444 ~/.docker/ca.pem
+$ chmod 0444 ~/.docker/cert.pem
+$ chmod 0400 ~/.docker/key.pem
+```
+
 Server
+
+Copy the server certs:
 
 ```
 $ scp ca.pem docker-server-key.pem docker-server.pem core@docker.kubestack.io:~/
@@ -81,7 +93,10 @@ $ sudo mv docker-server-key.pem /etc/docker/ssl/server-key.pem
 $ sudo mv docker-server.pem /etc/docker/ssl/server.pem
 ```
 
+Fix permissions:
+
 ```
+$ ssh core@docker.kubestack.io
 $ sudo chmod 0444 /etc/docker/ssl/ca.pem
 $ sudo chmod 0400 /etc/docker/ssl/server-key.pem
 $ sudo chmod 0444 /etc/docker/ssl/server.pem
