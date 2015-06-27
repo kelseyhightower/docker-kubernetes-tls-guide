@@ -131,3 +131,127 @@ WantedBy=multi-user.target
 ```
 $ sudo systemctl start docker
 ```
+
+## Kubernetes
+
+### Generate Server and Client Certs
+
+#### kube-apiserver
+
+```
+$ cfssl gencert \
+-ca=ca.pem \
+-ca-key=ca-key.pem \
+-config=ca-config.json \
+-profile=server \
+kube-apiserver-server-csr.json | cfssljson -bare kube-apiserver-server
+```
+
+Results:
+
+```
+kube-apiserver-server-key.pem
+kube-apiserver-server.csr
+kube-apiserver-server.pem
+```
+
+#### kubectl
+
+```
+$ cfssl gencert \
+-ca=ca.pem \
+-ca-key=ca-key.pem \
+-config=ca-config.json \
+-profile=client \
+kubernetes-admin-user.csr.json | cfssljson -bare kubernetes-admin-user
+```
+
+Results:
+
+```
+kubernetes-admin-user-key.pem
+kubernetes-admin-user.csr
+kubernetes-admin-user.pem
+```
+
+### Configure Kubernetes
+
+#### kube-apiserver
+
+Use a docker data container for the configs:
+
+Edit `Dockerfile`
+
+```
+FROM scratch
+MAINTAINER Kelsey Hightower <kelsey.hightower@gmail.com>
+COPY kube-apiserver-server-key.pem /etc/kubernetes/server-key.pem
+COPY kube-apiserver-server.pem /etc/kubernetes/server.pem
+COPY ca.pem /etc/kubernetes/ca.pem
+COPY policy.jsonl /etc/kubernetes/policy.jsonl
+VOLUME /etc/kubernetes
+```
+
+Edit: `policy.jsonl`
+
+```
+{"user":"admin"}
+{"user":"scheduler", "readonly": true, "resource": "pods"}
+{"user":"scheduler", "resource": "bindings"}
+{"user":"kubelet",  "readonly": true, "resource": "pods"}
+{"user":"kubelet",  "readonly": true, "resource": "services"}
+{"user":"kubelet",  "readonly": true, "resource": "endpoints"}
+{"user":"kubelet", "resource": "events"}
+{"user":"kelsey", "readonly": true}
+```
+
+```
+$ mkdir kube-apiserver-configs
+```
+
+```
+$ cp -v kube-apiserver-server-key.pem kube-apiserver-configs/
+$ cp -v kube-apiserver-server.pem kube-apiserver-configs/
+$ cp -v ca.pem kube-apiserver-configs/
+$ cp -v policy.jsonl kube-apiserver-configs/
+```
+
+Build the configuration container:
+
+```
+$ export DOCKER_HOST="tcp://kube-apiserver.kubestack.io:2376"
+$ export DOCKER_TLS_VERIFY=1
+$ cd kube-apiserver-configs
+$ docker build -t kube-apiserver-configs .
+$ docker create --name kube-apiserver-configs kube-apiserver-configs /bin/true
+```
+
+```
+$ docker-compose -p kubernetes -f compose-controller.yaml up -d
+```
+
+#### kubectl
+
+```
+$ kubectl config set-cluster secure \
+--certificate-authority=ca.pem \
+--embed-certs=true \
+--server=https://kube-apiserver.kubestack.io:6443
+```
+
+```
+$ kubectl config set-credentials admin \
+--client-key=kubernetes-admin-user-key.pem \
+--client-certificate=kubernetes-admin-user.pem \
+--embed-certs=true
+```
+
+```
+$ kubectl config set-context secure \
+--cluster=secure \
+--user=admin
+```
+
+```
+$ kubectl config use-context secure
+```
