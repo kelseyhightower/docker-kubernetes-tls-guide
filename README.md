@@ -9,7 +9,7 @@ https://github.com/cloudflare/cfssl
 ## Review and customize CSRs
 
 ```
-$ git clone https://github.com/kelseyhightower/kubernetes-tls-guide.git
+$ git clone https://github.com/kelseyhightower/docker-kubernetes-tls-guide.git 
 ```
 
 ## Initialize a CA
