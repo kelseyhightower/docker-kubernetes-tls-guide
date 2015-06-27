@@ -178,18 +178,24 @@ kubernetes-admin-user.pem
 
 #### kube-apiserver
 
-Use a docker data container for the configs:
-
-Edit `Dockerfile`
+Copy the server certs
 
 ```
-FROM scratch
-MAINTAINER Kelsey Hightower <kelsey.hightower@gmail.com>
-COPY kube-apiserver-server-key.pem /etc/kubernetes/server-key.pem
-COPY kube-apiserver-server.pem /etc/kubernetes/server.pem
-COPY ca.pem /etc/kubernetes/ca.pem
-COPY policy.jsonl /etc/kubernetes/policy.jsonl
-VOLUME /etc/kubernetes
+$ scp ca.pem kube-apiserver-server-key.pem kube-apiserver-server.pem core@kube-apiserver.kubestack.io:~/
+$ ssh core@kube-apiserver.kubestack.io
+$ sudo mkdir -p /etc/kubernetes/kube-apiserver
+$ sudo mv ca.pem /etc/kubernetes/kube-apiserver/ca.pem
+$ sudo mv kube-apiserver-server-key.pem /etc/kubernetes/kube-apiserver/server-key.pem
+$ sudo mv kube-apiserver-server.pem /etc/kubernetes/kube-apiserver/server.pem
+```
+
+Fix permissions:
+
+```
+$ ssh core@kube-apiserver.kubestack.io
+$ sudo chmod 0444 /etc/kubernetes/kube-apiserver/ca.pem
+$ sudo chmod 0400 /etc/kubernetes/kube-apiserver/server-key.pem
+$ sudo chmod 0444 /etc/kubernetes/kube-apiserver/server.pem
 ```
 
 Edit: `policy.jsonl`
@@ -202,29 +208,16 @@ Edit: `policy.jsonl`
 {"user":"kubelet",  "readonly": true, "resource": "services"}
 {"user":"kubelet",  "readonly": true, "resource": "endpoints"}
 {"user":"kubelet", "resource": "events"}
-{"user":"kelsey", "readonly": true}
 ```
 
 ```
-$ mkdir kube-apiserver-configs
+$ scp policy.jsonl core@kube-apiserver.kubestack.io:~/
+$ ssh core@kube-apiserver.kubestack.io
+$ sudo mv policy.jsonl /etc/kubernetes/kube-apiserver/policy.jsonl
+$ sudo chmod 0644 /etc/kubernetes/kube-apiserver/policy.jsonl
 ```
 
-```
-$ cp -v kube-apiserver-server-key.pem kube-apiserver-configs/
-$ cp -v kube-apiserver-server.pem kube-apiserver-configs/
-$ cp -v ca.pem kube-apiserver-configs/
-$ cp -v policy.jsonl kube-apiserver-configs/
-```
-
-Build the configuration container:
-
-```
-$ export DOCKER_HOST="tcp://kube-apiserver.kubestack.io:2376"
-$ export DOCKER_TLS_VERIFY=1
-$ cd kube-apiserver-configs
-$ docker build -t kube-apiserver-configs .
-$ docker create --name kube-apiserver-configs kube-apiserver-configs /bin/true
-```
+Start the Kubernetes Controller containers
 
 ```
 $ docker-compose -p kubernetes -f compose-controller.yaml up -d
