@@ -1,4 +1,4 @@
-# Kubernetes API Server Configuration
+# Kubernetes API Server Configuration using Configuration Containers
 
 This is most likely a really bad idea, but I'm going to try it anyway. Use a docker data-only container to manage configuration files for the Kubernetes API server.
 
