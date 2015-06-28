@@ -4,9 +4,13 @@ This guide will walk you through setting up TLS and TLS cert client authenticati
 
 ## Install CFSSL
 
+The first step in securing Docker and Kubernetes is to set up a PKI infra suture for managing TLS certificates.
+
 https://github.com/cloudflare/cfssl
 
 ## Review and customize CSRs
+
+The CFSSL tool takes various JSON configuration files to initial a CA and produce certificates. Clone this repo and review the current set of configs and adjust them for you environment.
 
 ```
 $ git clone https://github.com/kelseyhightower/docker-kubernetes-tls-guide.git 
@@ -14,11 +18,15 @@ $ git clone https://github.com/kelseyhightower/docker-kubernetes-tls-guide.git
 
 ## Initialize a CA
 
+Before we can generate any certs we need to initialize a CA.
+
 ```
 $ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 ```
 
 ## Docker
+
+The Docker daemon can be [protected using TLS certificates](https://docs.docker.com/articles/https), but instead of using the openssl tools we are going to leverage our PKI from above.
 
 ### Generate Server and Client Certs
 
@@ -62,7 +70,7 @@ docker-client.pem
 
 ### Configure Docker
 
-#### Docker Engine
+#### Docker Daemon
 
 Copy the server certs to the Docker host.
 
@@ -74,19 +82,18 @@ Move the server certs into place and fix permissions.
 
 ```
 $ ssh core@docker.kubestack.io
-$ sudo mv ca.pem /etc/docker/ssl/ca.pem
-$ sudo mv docker-server-key.pem /etc/docker/ssl/server-key.pem
-$ sudo mv docker-server.pem /etc/docker/ssl/server.pem
-$ sudo chmod 0444 /etc/docker/ssl/ca.pem
-$ sudo chmod 0400 /etc/docker/ssl/server-key.pem
-$ sudo chmod 0444 /etc/docker/ssl/server.pem
+$ sudo mv ca.pem /etc/docker/ca.pem
+$ sudo mv docker-server-key.pem /etc/docker/server-key.pem
+$ sudo mv docker-server.pem /etc/docker/server.pem
+$ sudo chmod 0444 /etc/docker/ca.pem
+$ sudo chmod 0400 /etc/docker/server-key.pem
+$ sudo chmod 0444 /etc/docker/server.pem
 ```
 
-Configure the Docker Engine service to use the certs.
-
-Edit: `/etc/systemd/system/docker.service`
+Configure the Docker daemon to use the certs.
 
 ```
+cat > /etc/systemd/system/docker.service <<EOF
 [Unit]
 Description=Docker Application Container Engine
 Documentation=http://docs.docker.io
@@ -97,15 +104,16 @@ ExecStart=/usr/bin/docker --daemon \
 --host=tcp://0.0.0.0:2376 \
 --host=unix:///var/run/docker.sock \
 --tlsverify \
---tlscacert=/etc/docker/ssl/ca.pem \
---tlscert=/etc/docker/ssl/server.pem \
---tlskey=/etc/docker/ssl/server-key.pem \
+--tlscacert=/etc/docker/ca.pem \
+--tlscert=/etc/docker/server.pem \
+--tlskey=/etc/docker/server-key.pem \
 --storage-driver=overlay
 Restart=on-failure
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
+EOF
 ```
 
 Start or restart the Docker daemon
@@ -238,9 +246,8 @@ $ sudo chmod 0400 /etc/kubernetes/kube-apiserver/server-key.pem
 $ sudo chmod 0444 /etc/kubernetes/kube-apiserver/server.pem
 ```
 
-Edit: `policy.jsonl`
-
 ```
+cat > policy.jsonl <<EOF
 {"user":"admin"}
 {"user":"scheduler", "readonly": true, "resource": "pods"}
 {"user":"scheduler", "resource": "bindings"}
@@ -248,6 +255,7 @@ Edit: `policy.jsonl`
 {"user":"kubelet",  "readonly": true, "resource": "services"}
 {"user":"kubelet",  "readonly": true, "resource": "endpoints"}
 {"user":"kubelet", "resource": "events"}
+EOF
 ```
 
 ```
