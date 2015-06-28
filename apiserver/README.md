@@ -2,9 +2,9 @@
 
 This is most likely a really bad idea, but I'm going to try it anyway. Use a docker data-only container to manage configuration files for the Kubernetes API server.
 
-## Build the configuration container
+## Build the configuration image
 
-I'm only building the configuration container on the Docker host that will use it for configuration. It's possible to store configuration containers on a Docker registry, but the security risk is very high, especially if the Docker registry is not behind "your" firewall under your complete control.
+I'm only building the configuration image on the Docker host that will use it for configuration. It's possible to store configuration images on a remote Docker registry, but the security risk is very high, especially if the Docker registry is not behind "your" firewall under your complete control.
 
 ```
 $ export DOCKER_HOST="tcp://node0.kubestack.io:2376" DOCKER_TLS_VERIFY=1
@@ -13,6 +13,8 @@ $ export DOCKER_HOST="tcp://node0.kubestack.io:2376" DOCKER_TLS_VERIFY=1
 ```
 $ docker build -t kube-apiserver-conf:0.0.1 .
 ```
+
+## Create the configuration container
 
 Create the configuration container so future containers can mount in the configs using `volumes-from`. 
 
