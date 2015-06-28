@@ -13,7 +13,7 @@ $ docker build -t kubelet-conf:0.0.1 .
 Create the configuration container so future containers can mount in the configs using `volumes-from`. 
 
 ```
-docker create --name kubelet-conf kube-apiserver-conf:0.0.1
+docker create --name kubelet-conf kubelet-conf:0.0.1
 ```
 
 ## Usage

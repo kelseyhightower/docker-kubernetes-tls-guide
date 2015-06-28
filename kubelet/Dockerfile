@@ -5,3 +5,4 @@ COPY kubelet-client.pem /etc/kubernetes/client.pem
 COPY ca.pem /etc/kubernetes/ca.pem
 COPY kubelet.kubeconfig /etc/kubernetes/kubeconfig
 VOLUME /etc/kubernetes
+CMD ["/bin/true"]
