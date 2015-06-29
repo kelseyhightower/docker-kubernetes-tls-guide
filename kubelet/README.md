@@ -1,4 +1,4 @@
-# Kubernetes API Server Configuration using Configuration Containers
+# Kubernetes Kubelet Configuration using Configuration Containers
 
 ```
 $ export DOCKER_HOST="tcp://node1.kubestack.io:2376" DOCKER_TLS_VERIFY=1
@@ -13,13 +13,13 @@ $ docker build -t kubelet-conf:0.0.1 .
 Create the configuration container so future containers can mount in the configs using `volumes-from`. 
 
 ```
-docker create --name kubelet-conf kubelet-conf:0.0.1
+docker create --name kubelet-conf-0.0.1 kubelet-conf:0.0.1
 ```
 
 ## Usage
 
 ```
-docker run --net=none --volumes-from=kubelet-conf busybox /bin/ls -lh /etc/kubernetes
+docker run --net=none --volumes-from=kubelet-conf-0.0.1 busybox /bin/ls -lh /etc/kubernetes
 ```
 
 ```

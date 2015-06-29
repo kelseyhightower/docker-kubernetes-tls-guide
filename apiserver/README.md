@@ -19,13 +19,13 @@ $ docker build -t kube-apiserver-conf:0.0.1 .
 Create the configuration container so future containers can mount in the configs using `volumes-from`. 
 
 ```
-docker create --name kube-apiserver-conf kube-apiserver-conf:0.0.1
+docker create --name kube-apiserver-conf-0.0.1 kube-apiserver-conf:0.0.1
 ```
 
 ## Usage
 
 ```
-docker run --net=none --volumes-from=kube-apiserver-conf busybox /bin/ls -lh /etc/kubernetes
+docker run --net=none --volumes-from=kube-apiserver-conf-0.0.1 busybox /bin/ls -lh /etc/kubernetes
 ```
 
 ```
