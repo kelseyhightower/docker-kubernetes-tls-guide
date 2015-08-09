@@ -4,7 +4,7 @@ This guide will walk you through setting up TLS and TLS cert client authenticati
 
 ## Install CFSSL
 
-The first step in securing Docker and Kubernetes is to set up a PKI infra suture for managing TLS certificates.
+The first step in securing Docker and Kubernetes is to set up a PKI infrastructure for managing TLS certificates.
 
 https://github.com/cloudflare/cfssl
 
